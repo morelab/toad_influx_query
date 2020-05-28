@@ -33,11 +33,6 @@ class Query:
         err = self.parse()
         if err != "":
             raise QueryParseException(err)
-        print("\n\n--\n\n")
-        print(topic)
-        print(data)
-        print(self.__str__())
-        print("\n\n--\n\n")
 
     def parse(self) -> str:
         """
