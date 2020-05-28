@@ -4,7 +4,7 @@ from typing import Dict, List, Any, Callable, Coroutine, Optional
 
 from gmqtt import Client as MQTTClient
 
-from toad_api import logger
+from toad_influx_query import logger, influx
 
 MQTTTopic = str
 MQTTPayload = bytes
@@ -36,6 +36,14 @@ class MQTT(MQTTClient):
         self.running = False
         self._STARTED = asyncio.Event()
         self._STOP = asyncio.Event()
+
+    def handle_message(self, topic, payload):
+        try:
+            query = influx.Query(topic, payload)
+        except influx.QueryParseException:
+            # TODO
+            pass
+        # TODO
 
     def on_connect(self, client, flags, rc, properties):
         logger.log_info_verbose("CONNECTED")
