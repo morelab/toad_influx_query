@@ -1,5 +1,6 @@
 import senml
 from aioinflux import iterpoints
+from toad_influx_query.logger import logger
 
 from toad_influx_query import influx
 
@@ -9,6 +10,7 @@ def parse_influx_query(topic, data) -> influx.Query:
 
 
 def influx_response_to_senml(database, measurement, response):
+    logger.info(f"Influx to SenML: {database}:{measurement}:{response}...")
     senml_meaurements = [{"bn": database}]
     for point in iterpoints(response, lambda *x, meta: dict(zip(meta["columns"], x))):
         senml_json = {"t": point["time"]}
@@ -16,14 +18,14 @@ def influx_response_to_senml(database, measurement, response):
         if "time" in point:
             senml_json["t"] = point["time"]
         elif "t" in point:
-            senml_json["t"] = point["time"]
+            senml_json["t"] = point["t"]
         else:
             raise ValueError(f"No time in influx points: {response}")
         # extract SenML value
         if "value" in point:
             senml_json["v"] = point["value"]
         elif "v" in point:
-            senml_json["v"] = point["value"]
+            senml_json["v"] = point["v"]
         else:
             raise ValueError(f"No value in influx points: {response}")
         # extract SenML name
@@ -45,6 +47,9 @@ def influx_response_to_senml(database, measurement, response):
             # raise ValueError(f"No value in influx points: {response}") ?
 
         senml_meaurements.append(senml_json)
+    logger.info(
+        f"Influx to SenML:{senml.SenMLDocument.from_json(senml_meaurements).to_json()}"
+    )
     return senml.SenMLDocument.from_json(senml_meaurements).to_json()
 
 
