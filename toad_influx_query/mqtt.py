@@ -37,9 +37,10 @@ class MQTT(MQTTClient):
         self._STARTED = asyncio.Event()
         self._STOP = asyncio.Event()
 
-    def handle_message(self, topic, payload):
+    def handle_message(self, topic, payload, properties):
         try:
             query = influx.Query(topic, payload)
+            self.publish(query.response_topic, query.__str__())
         except influx.QueryParseException:
             # TODO
             pass
