@@ -1,5 +1,5 @@
 import aioinflux
-import regex
+import re as regex
 import strict_rfc3339
 
 from toad_influx_query.config import INFLUX_HOST, INFLUX_PORT  # INFLUX_DB

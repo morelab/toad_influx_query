@@ -9,7 +9,7 @@ def parse_influx_query(topic, data) -> influx.Query:
     return influx.Query(topic, data)
 
 
-def influx_response_to_senml(database, measurement, response):
+def influx_response_to_senml(database: str, measurement: str, response):
     logger.info(f"Influx to SenML: {database}:{measurement}:{response}...")
     senml_meaurements = [{"bn": database}]
     for point in iterpoints(response, lambda *x, meta: dict(zip(meta["columns"], x))):
