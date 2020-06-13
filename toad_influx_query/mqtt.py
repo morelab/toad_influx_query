@@ -1,10 +1,11 @@
 from gmqtt.mqtt.constants import MQTTv311
 import asyncio
+from json import loads
 from typing import Dict, List, Any, Callable, Coroutine, Optional
 
 from gmqtt import Client as MQTTClient
 
-from toad_influx_query import logger, influx
+from toad_influx_query import logger, influx, protocol, utils
 
 MQTTTopic = str
 MQTTPayload = bytes
@@ -37,22 +38,30 @@ class MQTT(MQTTClient):
         self._STARTED = asyncio.Event()
         self._STOP = asyncio.Event()
 
-    def handle_message(self, topic, payload, properties):
+    async def handle_message(self, topic, payload, properties):
+        logger.log_info(f"Handle message: {payload}")
+        query: influx.Query = ...
         try:
             query = influx.Query(topic, payload)
-            self.publish(query.response_topic, query.__str__())
-        except influx.QueryParseException:
-            # TODO
-            pass
-        # TODO
+            logger.log_info(f"Running query: {query.__str__()}")
+            result = await query.run()
+            logger.log_info(f"Result: {result}")
+            senml = utils.influx_response_to_senml(query.db, query.measure, result)
+            logger.log_info(f"SenML: {senml}")
+            logger.log_info(f"Publish senml to {query.response_topic}")
+            self.publish(query.response_topic, senml)
+        except influx.QueryParseException as err:
+            self.publish(query.response_topic, {"error": f"Error parsing query: {err}"})
+        # TODO: how to reply if response topic is unknown?
 
     def on_connect(self, client, flags, rc, properties):
         logger.log_info_verbose("CONNECTED")
+        self.subscribe(f"{protocol.TOPIC}/#")
 
     def on_message(self, client, topic, payload, qos, properties):
-        print(self._client_id)
+        logger.log_info_verbose(f"RECV MSG: {payload}")
+        payload = loads(payload.decode())
         asyncio.create_task(self.message_handler(topic, payload, properties))
-        logger.log_info_verbose("RECV MSG:" + payload.decode())
 
     def on_disconnect(self, client, packet, exc=None):
         logger.log_info_verbose("DISCONNECTED")

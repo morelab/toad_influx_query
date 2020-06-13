@@ -1,7 +1,8 @@
 # MQTT
-TOPIC = "/out/toad_influx_query/"
+TOPIC = "query/influx_query"
 DATA_FIELD = "data"
 RESPONSE_ID_FIELD = "response-id"
+
 
 # InfluxDB
 POWER_MEASURE = "power"
