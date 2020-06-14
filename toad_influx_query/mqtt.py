@@ -46,7 +46,7 @@ class MQTT(MQTTClient):
             logger.log_info(f"Running query: {query.__str__()}")
             result = await query.run()
             logger.log_info(f"Result: {result}")
-            senml = utils.influx_response_to_senml(query.db, query.measure, result)
+            senml = utils.influx_response_to_senml(query, result)
             logger.log_info(f"SenML: {senml}")
             logger.log_info(f"Publish senml to {query.response_topic}")
             self.publish(query.response_topic, senml)
