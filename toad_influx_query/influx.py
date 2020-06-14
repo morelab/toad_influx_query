@@ -73,12 +73,12 @@ class Query:
 
         # ID
         _id = self.id
-        if _id and not regex.fullmatch(proto.ID_REGEX, _id):
+        if _id is not None and not regex.fullmatch(proto.ID_REGEX, _id):
             reasons.append(f"Invalid ID {_id}")
 
         # Row
         _row = self.row
-        if _row:
+        if _row is not None:
             if _id:
                 reasons.append(
                     f"Specified both a row and an identifier. Please choose one"
@@ -91,7 +91,7 @@ class Query:
 
         # Column
         _col = self.col
-        if _col:
+        if _col is not None:
             if _id:
                 reasons.append(
                     f"Specified both a column and an identifier. Please choose one"
@@ -104,10 +104,11 @@ class Query:
 
         # FROM date
         _from = self._from
-        if _from:
+        if _from is not None:
             try:
                 if not regex.fullmatch(proto.DATETIME_REGEX, _from):
-                    self._from = strict_rfc3339.timestamp_to_rfc3339_utcoffset(
+                    # timestamp_to_rfc3339_utcoffset
+                    self._from = strict_rfc3339.timestamp_to_rfc3339_localoffset(
                         float(_from)
                     )
             except (TypeError, ValueError):
@@ -115,10 +116,10 @@ class Query:
 
         # TO date
         _to = self._to
-        if _to:
+        if _to is not None:
             try:
                 if not regex.fullmatch(proto.DATETIME_REGEX, _to):
-                    self._to = strict_rfc3339.timestamp_to_rfc3339_utcoffset(float(_to))
+                    self._to = strict_rfc3339.timestamp_to_rfc3339_localoffset(float(_to))
             except (TypeError, ValueError):
                 reasons.append(f"Invalid TO date {_to}")
 
@@ -131,21 +132,23 @@ class Query:
         else:
             query = f'SELECT "value" FROM "{self.measure}" '
         filter_started = False
-        if self.id:
-            filter_started = True
+        if self.id is not None:
             query += f"WHERE \"id\" = '{self.id}' "
-        if self.row:
             filter_started = True
+        if self.row is not None:
             query += f"WHERE \"row\" = '{self.row}' "
-        if self.col:
             filter_started = True
-            query += f"{'AND' if self.row else 'WHERE'} \"column\" = '{self.col}' "
-        if self.type:
+        if self.col is not None:
+            query += f"{'AND' if filter_started else 'WHERE'} \"column\" = '{self.col}' "
+            filter_started = True
+        if self.type is not None:
             query += f"{'AND' if filter_started else 'WHERE'} \"type\" = '{self.type}'"
-        if self._from:
+            filter_started = True
+        if self._from is not None:
             query += f"{'AND' if filter_started else 'WHERE'} time >= '{self._from}'"
-        if self._to:
-            query += f"{'AND' if filter_started else 'WHERE'} time >= '{self._to}'"
+            filter_started = True
+        if self._to is not None:
+            query += f"{'AND' if filter_started else 'WHERE'} time <= '{self._to}'"
 
         return query
 
