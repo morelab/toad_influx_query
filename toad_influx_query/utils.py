@@ -1,3 +1,4 @@
+from json import loads, dumps
 import senml
 from aioinflux import iterpoints
 from toad_influx_query import logger
@@ -47,7 +48,12 @@ def influx_response_to_senml(query: Query, response):
     logger.log_info_verbose(
         f"Influx to SenML:{senml.SenMLDocument.from_json(senml_meaurements).to_json()}"
     )
-    return senml.SenMLDocument.from_json(senml_meaurements).to_json()
+    # delete "bver" field
+    result = senml.SenMLDocument.from_json(senml_meaurements).to_json()
+    first = result[0]
+    del first["bver"]
+    result[0] = first
+    return result
 
 
 def publish_response(mqtt_client, topic, senml_data):
