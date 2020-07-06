@@ -130,7 +130,7 @@ class Query:
         if self.operation:
             query = f'SELECT {self.operation}("value") FROM "{self.measure}" '
         else:
-            query = f'SELECT "value" FROM "{self.measure}" '
+            query = f'SELECT "value", "id" FROM "{self.measure}" '
         filter_started = False
         if self.id is not None:
             query += f"WHERE \"id\" = '{self.id}' "
